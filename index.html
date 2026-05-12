@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>OKX 中奖信息收集</title>
+  <link rel="icon" href="https://www.okx.com/favicon.ico" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body {
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+      background: #000;
+      color: #fff;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .bg {
+      position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(circle at 20% 10%, rgba(0,210,255,0.15), transparent 40%),
+        radial-gradient(circle at 80% 90%, rgba(255,140,0,0.12), transparent 45%),
+        #000;
+    }
+    .container {
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 32px 20px 80px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 28px;
+    }
+    .logo {
+      font-size: 32px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #fff, #00c6ff);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 8px;
+    }
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+    .subtitle {
+      font-size: 13px;
+      color: #9aa0a6;
+    }
+    .card {
+      background: rgba(20,20,20,0.85);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      padding: 24px 20px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .field { margin-bottom: 18px; }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: #d8dade;
+      margin-bottom: 8px;
+    }
+    label .req { color: #ff6b6b; margin-left: 2px; }
+    input[type="text"],
+    input[type="tel"],
+    input[type="email"],
+    textarea {
+      width: 100%;
+      background: #0a0a0a;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #fff;
+      font-size: 15px;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus {
+      border-color: #00c6ff;
+      background: #0f1518;
+    }
+    textarea { resize: vertical; min-height: 80px; }
+    .file-wrap {
+      position: relative;
+      border: 1.5px dashed rgba(255,255,255,0.2);
+      border-radius: 10px;
+      padding: 22px 14px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: #0a0a0a;
+    }
+    .file-wrap:hover { border-color: #00c6ff; background: #0f1518; }
+    .file-wrap input[type="file"] {
+      position: absolute; inset: 0; opacity: 0; cursor: pointer;
+    }
+    .file-icon { font-size: 28px; margin-bottom: 6px; opacity: 0.7; }
+    .file-hint { font-size: 13px; color: #9aa0a6; }
+    .file-name {
+      margin-top: 10px; font-size: 13px; color: #00c6ff;
+      word-break: break-all;
+    }
+    .preview {
+      margin-top: 12px;
+      max-width: 100%;
+      max-height: 220px;
+      border-radius: 8px;
+      display: none;
+    }
+    .submit-btn {
+      width: 100%;
+      background: linear-gradient(90deg, #00c6ff, #0072ff);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 16px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 10px;
+      transition: transform 0.1s, opacity 0.2s;
+      font-family: inherit;
+    }
+    .submit-btn:active { transform: scale(0.98); }
+    .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .notice {
+      margin-top: 16px;
+      font-size: 12px;
+      color: #6b7280;
+      text-align: center;
+      line-height: 1.7;
+    }
+    .toast {
+      position: fixed;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.92);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 28px 36px;
+      text-align: center;
+      z-index: 1000;
+      max-width: 88vw;
+      display: none;
+    }
+    .toast.show { display: block; animation: pop 0.25s ease-out; }
+    .toast .icon { font-size: 44px; margin-bottom: 12px; }
+    .toast .msg { font-size: 15px; color: #fff; margin-bottom: 4px; }
+    .toast .sub { font-size: 12px; color: #9aa0a6; }
+    .toast.success .icon { color: #00ffa0; }
+    .toast.error .icon { color: #ff6b6b; }
+    .overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 999;
+      display: none;
+    }
+    .overlay.show { display: block; }
+    .spinner {
+      width: 36px; height: 36px;
+      border: 3px solid rgba(255,255,255,0.15);
+      border-top-color: #00c6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes pop {
+      from { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
+      to   { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    }
+    .err-msg {
+      color: #ff6b6b;
+      font-size: 12px;
+      margin-top: 6px;
+      display: none;
+    }
+    .err-msg.show { display: block; }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+
+  <div class="container">
+    <div class="header">
+      <div class="logo">OKX</div>
+      <div class="title">🎉 中奖信息收集</div>
+      <div class="subtitle">恭喜您中奖！请准确填写以下信息，工作人员将尽快安排奖品寄送</div>
+    </div>
+
+    <form id="awardForm" class="card" autocomplete="on" novalidate>
+      <div class="field">
+        <label>社群昵称<span class="req">*</span></label>
+        <input type="text" name="nickname" placeholder="您在群里的昵称" required maxlength="40" />
+        <div class="err-msg" data-for="nickname">请填写社群昵称</div>
+      </div>
+
+      <div class="field">
+        <label>真实姓名<span class="req">*</span></label>
+        <input type="text" name="realname" placeholder="收件人真实姓名" required maxlength="40" />
+        <div class="err-msg" data-for="realname">请填写真实姓名</div>
+      </div>
+
+      <div class="field">
+        <label>手机号<span class="req">*</span></label>
+        <input type="tel" name="phone" placeholder="11 位手机号，便于快递联系" required maxlength="20" inputmode="numeric" />
+        <div class="err-msg" data-for="phone">请填写有效的手机号</div>
+      </div>
+
+      <div class="field">
+        <label>所在的群名<span class="req">*</span></label>
+        <input type="text" name="groupname" placeholder="请填写完整准确的群名称" required maxlength="60" />
+        <div class="err-msg" data-for="groupname">请填写群名</div>
+      </div>
+
+      <div class="field">
+        <label>收货地址<span class="req">*</span></label>
+        <textarea name="address" placeholder="省 / 市 / 区 / 街道 / 门牌号" required maxlength="200"></textarea>
+        <div class="err-msg" data-for="address">请填写完整收货地址</div>
+      </div>
+
+      <div class="field">
+        <label>OKX 邮箱<span class="req">*</span></label>
+        <input type="email" name="email" placeholder="您注册 OKX 使用的邮箱" required maxlength="80" />
+        <div class="err-msg" data-for="email">请填写有效邮箱</div>
+      </div>
+
+      <div class="field">
+        <label>得奖证明截图<span class="req">*</span></label>
+        <div class="file-wrap" id="fileWrap">
+          <input type="file" name="proof" accept="image/*" required />
+          <div class="file-icon">📷</div>
+          <div class="file-hint">点击上传中奖截图（仅图片，≤ 5MB）</div>
+          <div class="file-name" id="fileName"></div>
+          <img class="preview" id="preview" alt="" />
+        </div>
+        <div class="err-msg" data-for="proof">请上传中奖证明截图</div>
+      </div>
+
+      <button class="submit-btn" type="submit" id="submitBtn">提交信息</button>
+
+      <div class="notice">
+        所有信息仅用于本次活动奖品寄送<br />
+        提交后请耐心等待，请勿重复提交
+      </div>
+    </form>
+  </div>
+
+  <div class="overlay" id="overlay">
+    <div class="toast" id="toast">
+      <div class="spinner" id="spinner"></div>
+      <div class="icon" id="toastIcon" style="display:none;"></div>
+      <div class="msg" id="toastMsg">正在提交，请稍候…</div>
+      <div class="sub" id="toastSub"></div>
+    </div>
+  </div>
+
+  <script>
+    // ============ 配置区：部署后请把下方替换为您的 Cloudflare Worker URL ============
+    const WORKER_URL = "https://okx-award-form.ooi-junechi.workers.dev";
+    // =============================================================================
+
+    const form = document.getElementById("awardForm");
+    const fileInput = form.querySelector('input[type="file"]');
+    const fileName = document.getElementById("fileName");
+    const preview = document.getElementById("preview");
+    const submitBtn = document.getElementById("submitBtn");
+    const overlay = document.getElementById("overlay");
+    const toast = document.getElementById("toast");
+    const toastIcon = document.getElementById("toastIcon");
+    const toastMsg = document.getElementById("toastMsg");
+    const toastSub = document.getElementById("toastSub");
+    const spinner = document.getElementById("spinner");
+
+    fileInput.addEventListener("change", () => {
+      const f = fileInput.files[0];
+      if (!f) return;
+      if (!/^image\//.test(f.type)) {
+        showError("请上传图片文件");
+        fileInput.value = "";
+        return;
+      }
+      if (f.size > 5 * 1024 * 1024) {
+        showError("图片大小不能超过 5MB");
+        fileInput.value = "";
+        return;
+      }
+      fileName.textContent = "已选择：" + f.name;
+      const reader = new FileReader();
+      reader.onload = e => { preview.src = e.target.result; preview.style.display = "block"; };
+      reader.readAsDataURL(f);
+    });
+
+    function showError(msg) {
+      overlay.classList.add("show");
+      toast.classList.add("show", "error");
+      toast.classList.remove("success");
+      spinner.style.display = "none";
+      toastIcon.style.display = "block";
+      toastIcon.textContent = "❌";
+      toastMsg.textContent = msg;
+      toastSub.textContent = "";
+      setTimeout(() => {
+        overlay.classList.remove("show");
+        toast.classList.remove("show");
+      }, 2200);
+    }
+
+    function showSuccess() {
+      overlay.classList.add("show");
+      toast.classList.add("show", "success");
+      toast.classList.remove("error");
+      spinner.style.display = "none";
+      toastIcon.style.display = "block";
+      toastIcon.textContent = "✅";
+      toastMsg.textContent = "提交成功！";
+      toastSub.textContent = "工作人员将尽快为您安排奖品寄送";
+    }
+
+    function showLoading() {
+      overlay.classList.add("show");
+      toast.classList.add("show");
+      toast.classList.remove("success", "error");
+      spinner.style.display = "block";
+      toastIcon.style.display = "none";
+      toastMsg.textContent = "正在提交，请稍候…";
+      toastSub.textContent = "请勿关闭页面";
+    }
+
+    function validate() {
+      let ok = true;
+      document.querySelectorAll(".err-msg").forEach(e => e.classList.remove("show"));
+
+      const nickname = form.nickname.value.trim();
+      const realname = form.realname.value.trim();
+      const phone = form.phone.value.trim();
+      const groupname = form.groupname.value.trim();
+      const address = form.address.value.trim();
+      const email = form.email.value.trim();
+      const proof = fileInput.files[0];
+
+      const setErr = (n) => {
+        document.querySelector(`.err-msg[data-for="${n}"]`).classList.add("show");
+        ok = false;
+      };
+
+      if (!nickname) setErr("nickname");
+      if (!realname) setErr("realname");
+      if (!phone || !/^\d{6,20}$/.test(phone.replace(/[-\s]/g, ""))) setErr("phone");
+      if (!groupname) setErr("groupname");
+      if (!address) setErr("address");
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) setErr("email");
+      if (!proof) setErr("proof");
+
+      return ok;
+    }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      if (!validate()) return;
+      if (WORKER_URL.includes("YOUR-WORKER")) {
+        showError("请先配置 WORKER_URL");
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "提交中…";
+      showLoading();
+
+      try {
+        const fd = new FormData();
+        fd.append("nickname",  form.nickname.value.trim());
+        fd.append("realname",  form.realname.value.trim());
+        fd.append("phone",     form.phone.value.trim());
+        fd.append("groupname", form.groupname.value.trim());
+        fd.append("address",   form.address.value.trim());
+        fd.append("email",     form.email.value.trim());
+        fd.append("proof",     fileInput.files[0]);
+
+        const res = await fetch(WORKER_URL, { method: "POST", body: fd });
+        const data = await res.json().catch(() => ({}));
+
+        if (res.ok && data.ok) {
+          showSuccess();
+          form.reset();
+          fileName.textContent = "";
+          preview.style.display = "none";
+          submitBtn.textContent = "已提交";
+        } else {
+          showError(data.error || "提交失败，请稍后再试");
+          submitBtn.disabled = false;
+          submitBtn.textContent = "重新提交";
+        }
+      } catch (err) {
+        showError("网络异常，请检查后重试");
+        submitBtn.disabled = false;
+        submitBtn.textContent = "重新提交";
+      }
+    });
+  </script>
+</body>
+</html>
